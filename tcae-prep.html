@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TCAE Prep - Exámenes Oficiales</title>
+    <!-- Fuente Plus Jakarta Sans -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#0D9488',
+                        'primary-dark': '#0F766E',
+                        'primary-light': '#F0FDFA',
+                    },
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans antialiased min-h-screen flex flex-col">
+
+    <!-- Header / Navbar -->
+    <header class="bg-white border-b border-gray-100 sticky top-0 z-30 shadow-sm">
+        <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center space-x-3 cursor-pointer" onclick="goToHome()">
+                <div class="w-10 h-10 rounded-xl bg-primary-light flex items-center justify-center text-primary font-bold text-xl shadow-inner">
+                    ⚡
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg text-gray-900 leading-tight">TCAE Prep</h1>
+                    <p class="text-xs text-gray-500">Simulador de Oposición</p>
+                </div>
+            </div>
+            <div id="header-actions" class="flex items-center space-x-2">
+                <!-- Botón de Errores dinámico -->
+                <button onclick="openErrorsModal()" class="text-xs font-medium bg-amber-50 text-amber-700 px-3 py-1.5 rounded-lg border border-amber-200 flex items-center space-y-0 space-x-1 hover:bg-amber-100 transition">
+                    <span>⚠️ Errores</span>
+                    <span id="error-badge" class="bg-amber-600 text-white rounded-full px-1.5 py-0.2 text-[10px]">0</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Contenedor Principal Dinámico -->
+    <main class="flex-1 max-w-4xl w-full mx-auto p-4 md:p-6 pb-24">
+
+        <!-- VISTA 1: HOME / DASHBOARD -->
+        <div id="view-home" class="space-y-6">
+
+            <!-- Simulacro Rápido (Estilo Chess.com) -->
+            <div class="bg-gradient-to-r from-primary to-teal-700 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden">
+                <div class="relative z-10">
+                    <span class="bg-white/20 text-white text-xs font-semibold px-2.5 py-1 rounded-full uppercase tracking-wider">Modo exprés</span>
+                    <h2 class="text-2xl font-bold mt-2">Simulacro Rápido General</h2>
+                    <p class="text-teal-100 text-sm mt-1 max-w-md">30 preguntas aleatorias de todas las asignaturas para poner a prueba tu nivel al instante.</p>
+
+                    <div class="mt-4 flex flex-wrap items-center gap-3">
+                        <button onclick="startQuickExam()" class="bg-white text-primary font-bold px-5 py-2.5 rounded-xl shadow hover:bg-teal-50 transition active:scale-95 text-sm">
+                            Empezar Simulacro 🚀
+                        </button>
+                    </div>
+                </div>
+                <div class="absolute -right-6 -bottom-6 text-white/10 text-9xl font-bold select-none pointer-events-none">
+                    TCAE
+                </div>
+            </div>
+
+            <!-- Listado de Asignaturas Oficiales -->
+            <div>
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-bold text-gray-900">Asignaturas Oficiales</h3>
+                    <span class="text-xs text-gray-500 font-medium">Elige una para filtrar</span>
+                </div>
+
+                <div id="subjects-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Inyectado por JS -->
+                </div>
+            </div>
+
+        </div>
+
+        <!-- VISTA 2: SELECCIÓN DE TEMAS -->
+        <div id="view-topics" class="hidden space-y-6">
+            <button onclick="goToHome()" class="text-sm font-medium text-primary flex items-center space-x-1 hover:underline">
+                <span>← Volver a Asignaturas</span>
+            </button>
+
+            <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+                <h2 id="selected-subject-title" class="text-2xl font-bold text-gray-900"></h2>
+                <p class="text-sm text-gray-500 mt-1">Selecciona los temas que deseas incluir en el examen o hazlo completo.</p>
+
+                <div class="mt-6 space-y-3" id="topics-list-container">
+                    <!-- Inyectado por JS -->
+                </div>
+
+                <!-- Opciones de examen (Número de preguntas) -->
+                <div class="mt-8 pt-6 border-t border-gray-100">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Número de preguntas para este test:</label>
+                    <div id="question-count-selector" class="flex space-x-2">
+                        <button onclick="setQuestionCount(15)" class="count-btn px-4 py-2 rounded-xl border border-gray-200 text-sm font-medium text-gray-700 hover:border-primary transition">15</button>
+                        <button onclick="setQuestionCount(30)" class="count-btn px-4 py-2 rounded-xl border border-primary bg-primary-light text-primary font-bold text-sm transition">30</button>
+                        <button onclick="setQuestionCount(50)" class="count-btn px-4 py-2 rounded-xl border border-gray-200 text-sm font-medium text-gray-700 hover:border-primary transition">50</button>
+                    </div>
+                </div>
+
+                <div class="mt-8">
+                    <button onclick="startConfiguredExam()" class="w-full bg-primary text-white font-bold py-3.5 rounded-xl shadow hover:bg-primary-dark transition text-center">
+                        Comenzar Examen de Asignatura 🎯
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- VISTA 3: PANTALLA DE EXAMEN (SIN CORRECCIÓN INMEDIATA) -->
+        <div id="view-exam" class="hidden space-y-4">
+
+            <!-- Barra superior del examen -->
+            <div class="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm flex items-center justify-between">
+                <div>
+                    <span id="exam-subject-badge" class="text-xs font-semibold bg-primary-light text-primary px-2.5 py-1 rounded-md">Asignatura</span>
+                    <h3 id="exam-progress-text" class="text-sm font-bold text-gray-800 mt-1">Pregunta 1 de 30</h3>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button onclick="confirmSubmitExam()" class="bg-primary text-white text-xs font-bold px-4 py-2 rounded-xl shadow hover:bg-primary-dark transition">
+                        Entregar Examen 🏁
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tarjeta de Pregunta -->
+            <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm space-y-6">
+                <div class="flex items-start justify-between">
+                    <h4 id="question-title" class="text-base font-semibold text-gray-900 leading-snug"></h4>
+                    <span id="question-unit-tag" class="text-xs text-gray-400 bg-gray-100 px-2.5 py-1 rounded-md ml-2 shrink-0">Unidad X</span>
+                </div>
+
+                <!-- Imagen opcional -->
+                <div id="question-image-container" class="hidden">
+                    <img id="question-image" src="" alt="Ilustración pregunta" class="max-h-64 rounded-xl border border-gray-200 object-cover mx-auto cursor-pointer" onclick="zoomImage(this.src)">
+                    <p class="text-[11px] text-center text-gray-400 mt-1">Toca la imagen para ampliar</p>
+                </div>
+
+                <!-- Contenedor dinámico según tipo de pregunta -->
+                <div id="question-options-container" class="space-y-3">
+                    <!-- Opciones inyectadas por JS -->
+                </div>
+            </div>
+
+            <!-- Navegación inferior entre preguntas -->
+            <div class="flex items-center justify-between pt-2">
+                <button onclick="prevQuestion()" id="btn-prev" class="bg-white border border-gray-200 text-gray-700 text-sm font-semibold px-4 py-2.5 rounded-xl hover:bg-gray-50 transition shadow-sm disabled:opacity-40">
+                    ← Anterior
+                </button>
+
+                <!-- Selector rápido numérico de preguntas -->
+                <div id="question-jump-dots" class="flex items-center space-x-1.5 overflow-x-auto max-w-[200px] md:max-w-md py-1">
+                    <!-- Generado por JS -->
+                </div>
+
+                <button onclick="nextQuestion()" id="btn-next" class="bg-white border border-gray-200 text-gray-700 text-sm font-semibold px-4 py-2.5 rounded-xl hover:bg-gray-50 transition shadow-sm">
+                    Siguiente →
+                </button>
+            </div>
+
+        </div>
+
+        <!-- VISTA 4: RESULTADOS Y ANÁLISIS -->
+        <div id="view-results" class="hidden space-y-6">
+
+            <!-- Resumen de Nota -->
+            <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm text-center space-y-3">
+                <div class="w-16 h-16 bg-primary-light text-primary rounded-2xl mx-auto flex items-center justify-center text-3xl font-bold shadow-inner">
+                    📊
+                </div>
+                <h2 class="text-2xl font-bold text-gray-900">¡Examen Entregado!</h2>
+
+                <div class="flex justify-center items-center space-x-6 my-4">
+                    <div class="bg-gray-50 px-6 py-3 rounded-2xl border border-gray-100">
+                        <p class="text-xs text-gray-400 uppercase font-semibold">Nota final</p>
+                        <p id="res-grade-10" class="text-3xl font-extrabold text-primary mt-0.5">0.0 / 10</p>
+                    </div>
+                    <div class="bg-gray-50 px-6 py-3 rounded-2xl border border-gray-100">
+                        <p class="text-xs text-gray-400 uppercase font-semibold">Porcentaje</p>
+                        <p id="res-percentage" class="text-3xl font-extrabold text-gray-800 mt-0.5">0%</p>
+                    </div>
+                </div>
+
+                <div class="flex justify-center space-x-3 pt-2">
+                    <button onclick="goToHome()" class="bg-primary text-white text-sm font-bold px-6 py-2.5 rounded-xl shadow hover:bg-primary-dark transition">
+                        Volver al Inicio 🏠
+                    </button>
+                </div>
+            </div>
+
+            <!-- Pestañas de Análisis -->
+            <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm space-y-4">
+                <div class="flex items-center justify-between border-b border-gray-100 pb-3">
+                    <h3 class="font-bold text-gray-900">Análisis detallado de respuestas</h3>
+                    <div class="flex space-x-1 bg-gray-100 p-1 rounded-xl text-xs font-semibold">
+                        <button onclick="filterAnalysis('all')" id="filter-all" class="px-3 py-1.5 rounded-lg bg-white text-gray-800 shadow-sm transition">Todas</button>
+                        <button onclick="filterAnalysis('errors')" id="filter-errors" class="px-3 py-1.5 rounded-lg text-gray-600 hover:text-gray-900 transition">Falladas / Parciales</button>
+                        <button onclick="filterAnalysis('correct')" id="filter-correct" class="px-3 py-1.5 rounded-lg text-gray-600 hover:text-gray-900 transition">Correctas</button>
+                    </div>
+                </div>
+
+                <div id="analysis-list" class="space-y-4">
+                    <!-- Inyectado por JS -->
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- MODAL DE ERRORES GLOBAL -->
+    <div id="modal-errors" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 space-y-4 max-h-[85vh] flex flex-col shadow-2xl">
+            <div class="flex items-center justify-between border-b border-gray-100 pb-3">
+                <h3 class="font-bold text-lg text-gray-900">⚠️ Banco de Errores y Parciales</h3>
+                <button onclick="closeErrorsModal()" class="text-gray-400 hover:text-gray-600 font-bold text-xl px-2">×</button>
+            </div>
+            <div id="errors-modal-content" class="flex-1 overflow-y-auto space-y-3 pr-1">
+                <!-- Inyectado por JS -->
+            </div>
+            <div class="pt-3 border-t border-gray-100 flex justify-between items-center">
+                <button onclick="clearErrors()" class="text-xs text-red-600 hover:underline font-medium">Borrar historial de errores</button>
+                <button onclick="closeErrorsModal()" class="bg-gray-100 text-gray-700 text-sm font-semibold px-4 py-2 rounded-xl hover:bg-gray-200 transition">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE CONFIRMACIÓN DE ENTREGA -->
+    <div id="modal-confirm" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-6 text-center space-y-4 shadow-2xl">
+            <div class="w-12 h-12 bg-amber-50 text-amber-600 rounded-full mx-auto flex items-center justify-center text-xl font-bold">
+                ⚠️
+            </div>
+            <h3 class="font-bold text-lg text-gray-900">¿Entregar examen?</h3>
+            <p id="confirm-warning-text" class="text-sm text-gray-500">Tienes algunas preguntas sin responder. ¿Seguro que deseas entregarlo ahora?</p>
+            <div class="flex space-x-3 pt-2">
+                <button onclick="closeConfirmModal()" class="flex-1 bg-gray-100 text-gray-700 text-sm font-semibold py-2.5 rounded-xl hover:bg-gray-200 transition">Revisar</button>
+                <button onclick="executeSubmitExam()" class="flex-1 bg-primary text-white text-sm font-bold py-2.5 rounded-xl hover:bg-primary-dark transition">Sí, Entregar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE ZOOM DE IMAGEN -->
+    <div id="modal-zoom" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4" onclick="closeZoom()">
+        <img id="zoomed-image" src="" class="max-w-full max-h-[90vh] rounded-xl object-contain">
+    </div>
+
+    <!-- LÓGICA DE LA APLICACIÓN -->
+    <script>
+        // Datos oficiales de las 7 asignaturas de TCAE (sin códigos raros ni tutorías)
+        const subjectsData = [
+            {
+                id: 'operaciones',
+                name: 'Operaciones administrativas y documentación sanitaria',
+                icon: '📋',
+                topics: ['Unidad 1: El Sistema Sanitario Español', 'Unidad 2: Documentación clínica y no clínica', 'Unidad 3: Archivo y custodia de historias', 'Unidad 4: Secretariado y atención al paciente']
+            },
+            {
+                id: 'bienestar',
+                name: 'Bienestar del paciente: necesidades de higiene, reposo y movimiento',
+                icon: '🛏️',
+                topics: ['Unidad 1: Principios de mecánica corporal', 'Unidad 2: Higiene y aseo del paciente encamado', 'Unidad 3: Posiciones anatómicas y movilización', 'Unidad 4: Úlceras por presión (UPP)']
+            },
+            {
+                id: 'cuidados',
+                name: 'Cuidados básicos de enfermería aplicados a las necesidades del ser humano',
+                icon: '🩺',
+                topics: ['Unidad 1: Constantes vitales y su control', 'Unidad 2: Balance de líquidos y excretas', 'Unidad 3: Administración de medicación vía tópica/oral', 'Unidad 4: Muestras biológicas']
+            },
+            {
+                id: 'higiene',
+                name: 'Higiene del medio hospitalario y limpieza de material',
+                icon: '🧼',
+                topics: ['Unidad 1: Limpieza, desinfección y esterilización', 'Unidad 2: Autoclaves y controles', 'Unidad 3: Infecciones nosocomiales y aislamiento', 'Unidad 4: Gestión de residuos sanitarios']
+            },
+            {
+                id: 'educacion',
+                name: 'Educación para la salud',
+                icon: '🍏',
+                topics: ['Unidad 1: Concepto de salud y enfermedad', 'Unidad 2: Hábitos de vida saludables y nutrición', 'Unidad 3: Educación sanitaria a grupos de riesgo', 'Unidad 4: Prevención de accidentes']
+            },
+            {
+                id: 'etica',
+                name: 'Ética de la salud: moral y valores',
+                icon: '⚖️',
+                topics: ['Unidad 1: Deontología profesional del TCAE', 'Unidad 2: Secreto profesional y confidencialidad', 'Unidad 3: Ley de Autonomía del Paciente', 'Unidad 4: Bioética y dilemas sanitarios']
+            },
+            {
+                id: 'fol',
+                name: 'Formación y orientación laboral',
+                icon: '💼',
+                topics: ['Unidad 1: El contrato de trabajo y nóminas', 'Unidad 2: Prevención de riesgos laborales (PRL)', 'Unidad 3: Seguridad Social y prestaciones', 'Unidad 4: Búsqueda activa de empleo']
+            }
+        ];
+
+        // Banco amplio de preguntas de ejemplo con los 7 formatos
+        const questionBank = [
+            // Tipo 1: Test clásico (Single)
+            {
+                id: 101,
+                subjectId: 'higiene',
+                unit: 'Unidad 2: Autoclaves y controles',
+                type: 'single',
+                text: '¿Cuál es la temperatura y presión estándar recomendada en un autoclave de vapor para la esterilización de material?',
+                options: [
+                    'A) 100ºC a 1 atmósfera de presión',
+                    'B) 121ºC a 1 atmósfera de presión (sobrepresión)',
+                    'C) 180ºC durante 30 minutos sin presión',
+                    'D) 134ºC a presión atmosférica normal'
+                ],
+                correctAnswer: 1, // B
+                image: null
+            },
+            // Tipo 2: Multirrespuesta (Multiple)
+            {
+                id: 102,
+                subjectId: 'bienestar',
+                unit: 'Unidad 4: Úlceras por presión (UPP)',
+                type: 'multiple',
+                text: 'Indique qué factores de riesgo favorecen la aparición de Úlceras por Presión (UPP): (Seleccione todas las correctas)',
+                options: [
+                    'A) Inmovilidad prolongada',
+                    'B) Incontinencia urinaria o fecal',
+                    'C) Hidratación cutánea excesiva y constante',
+                    'D) Desnutrición y déficit proteico'
+                ],
+                correctAnswer: [0, 1, 3],
+                image: null
+            },
+            // Tipo 3: Emparejamientos (Matching)
+            {
+                id: 103,
+                subjectId: 'bienestar',
+                unit: 'Unidad 3: Posiciones anatómicas y movilización',
+                type: 'matching',
+                text: 'Empareje correctamente cada posición anatómica con su indicación clínica habitual:',
+                pairs: [
+                    { left: '1. Fowler', right: 'A) Exploración ginecológica y urológica' },
+                    { left: '2. Trendelenburg', right: 'B) Paciente semiincorporado (problemas respiratorios)' },
+                    { left: '3. Litotomía', right: 'C) Lipotimias o shock (favorecer riego cerebral)' }
+                ],
+                correctAnswer: { 0: 1, 1: 2, 2: 0 }, // 1->B, 2->C, 3->A
+                image: null
+            },
+            // Tipo 4: Desplegables (Dropdown)
+            {
+                id: 104,
+                subjectId: 'cuidados',
+                unit: 'Unidad 1: Constantes vitales y su control',
+                type: 'dropdown',
+                text: 'Complete correctamente los siguientes términos sobre constantes vitales:',
+                textTemplate: 'La frecuencia cardíaca normal en reposo en adultos se denomina [DROP1], mientras que una cifra de tensión arterial sistólica superior a 140 mmHg se conoce como [DROP2].',
+                dropdowns: {
+                    'DROP1': { options: ['Bradicardia', 'Normocardia / Pulso normal', 'Taquicardia'], correct: 1 },
+                    'DROP2': { options: ['Hipotensión', 'Normotensión', 'Hipertensión'], correct: 2 }
+                },
+                image: null
+            },
+            // Tipo 5: Banco de palabras (Word Bank)
+            {
+                id: 105,
+                subjectId: 'higiene',
+                unit: 'Unidad 3: Infecciones nosocomiales y aislamiento',
+                type: 'wordbank',
+                text: 'Arrastre o seleccione la palabra correcta para completar la frase sobre aislamiento:',
+                textTemplate: 'El conjunto de medidas destinadas a evitar la transmisión de microorganismos patógenos en el hospital se denomina aislamiento [BLANK1] y requiere el uso de equipos de protección individual.',
+                words: ['hospitalario', 'profiláctico', 'de barrera', 'doméstico'],
+                correctAnswer: { 'BLANK1': 'de barrera' },
+                image: null
+            },
+            // Tipo 6: Respuesta escrita (Text Entry)
+            {
+                id: 106,
+                subjectId: 'cuidados',
+                unit: 'Unidad 2: Balance de líquidos y excretas',
+                type: 'textentry',
+                text: '¿Cómo se denomina el volumen total de orina emitida por un paciente en 24 horas?',
+                validAnswers: ['diuresis', 'la diuresis'],
+                image: null
+            },
+            // Tipo 7: Imagen con zoom (Image-based)
+            {
+                id: 107,
+                subjectId: 'bienestar',
+                unit: 'Unidad 3: Posiciones anatómicas y movilización',
+                type: 'single',
+                text: 'Observe la siguiente postura representada. ¿Cómo se denomina exactamente esta posición?',
+                options: [
+                    'A) Decúbito supino',
+                    'B) Decúbito prono (ventral)',
+                    'C) Posición de Sims o lateral de seguridad',
+                    'D) Posición Morestin'
+                ],
+                correctAnswer: 2,
+                image: 'https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&w=600&q=80'
+            },
+            // Pregunta extra de test clásico para rellenar
+            {
+                id: 108,
+                subjectId: 'etica',
+                unit: 'Unidad 2: Secreto profesional y confidencialidad',
+                type: 'single',
+                text: 'El secreto profesional al que está obligado el TCAE está amparado legalmente por:',
+                options: [
+                    'A) Una recomendación interna del hospital únicamente',
+                    'B) El Código Penal y la Constitución Española sobre intimidad',
+                    'C) La Ley de Prevención de Riesgos Laborales',
+                    'D) El convenio colectivo de hostelería'
+                ],
+                correctAnswer: 1,
+                image: null
+            }
+        ];
+
+        // Estado Global de la App
+        let currentView = 'home';
+        let selectedSubject = null;
+        let selectedTopics = [];
+        let currentQuestionCount = 30;
+        let activeExamQuestions = [];
+        let currentQuestionIndex = 0;
+        let userAnswers = {}; // Almacena las respuestas dadas por el usuario
+        let examResults = null;
+        let savedErrors = JSON.parse(localStorage.getItem('tcae_errors') || '[]');
+
+        // Inicialización
+        window.onload = function() {
+            renderSubjectsGrid();
+            updateErrorBadge();
+        };
+
+        function goToHome() {
+            currentView = 'home';
+            selectedSubject = null;
+            selectedTopics = [];
+            hideAllViews();
+            document.getElementById('view-home').classList.remove('hidden');
+            document.getElementById('header-actions').classList.remove('hidden');
+        }
+
+        function hideAllViews() {
+            document.getElementById('view-home').classList.add('hidden');
+            document.getElementById('view-topics').classList.add('hidden');
+            document.getElementById('view-exam').classList.add('hidden');
+            document.getElementById('view-results').classList.add('hidden');
+        }
+
+        function renderSubjectsGrid() {
+            const grid = document.getElementById('subjects-grid');
+            grid.innerHTML = '';
+            subjectsData.forEach(sub => {
+                grid.innerHTML += `
+                    <div onclick="selectSubject('${sub.id}')" class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-primary/40 transition cursor-pointer flex items-start space-x-4 group">
+                        <div class="w-12 h-12 rounded-xl bg-primary-light flex items-center justify-center text-2xl shrink-0 group-hover:scale-105 transition">
+                            ${sub.icon}
+                        </div>
+                        <div class="flex-1">
+                            <h4 class="font-bold text-gray-900 group-hover:text-primary transition text-sm md:text-base leading-snug">${sub.name}</h4>
+                            <p class="text-xs text-gray-400 mt-1">${sub.topics.length} temas disponibles</p>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function selectSubject(subId) {
+            selectedSubject = subjectsData.find(s => s.id === subId);
+            selectedTopics = [...selectedSubject.topics]; // Por defecto todos seleccionados
+
+            document.getElementById('selected-subject-title').innerText = selectedSubject.name;
+
+            const topicsContainer = document.getElementById('topics-list-container');
+            topicsContainer.innerHTML = '';
+
+            selectedSubject.topics.forEach((topic, idx) => {
+                topicsContainer.innerHTML += `
+                    <label class="flex items-center space-x-3 p-3 rounded-xl border border-gray-100 hover:bg-gray-50 transition cursor-pointer">
+                        <input type="checkbox" checked onchange="toggleTopic('${topic}')" class="w-4 h-4 text-primary rounded border-gray-300 focus:ring-primary">
+                        <span class="text-sm font-medium text-gray-700">${topic}</span>
+                    </label>
+                `;
+            });
+
+            hideAllViews();
+            document.getElementById('view-topics').classList.remove('hidden');
+        }
+
+        function toggleTopic(topic) {
+            if (selectedTopics.includes(topic)) {
+                selectedTopics = selectedTopics.filter(t => t !== topic);
+            } else {
+                selectedTopics.push(topic);
+            }
+        }
+
+        function setQuestionCount(count) {
+            currentQuestionCount = count;
+            document.querySelectorAll('.count-btn').forEach(btn => {
+                btn.classList.remove('border-primary', 'bg-primary-light', 'text-primary', 'font-bold');
+                btn.classList.add('border-gray-200', 'text-gray-700', 'font-medium');
+            });
+            event.target.classList.remove('border-gray-200', 'text-gray-700', 'font-medium');
+            event.target.classList.add('border-primary', 'bg-primary-light', 'text-primary', 'font-bold');
+        }
+
+        function startQuickExam() {
+            // Selecciona aleatorias de todo el banco
+            activeExamQuestions = [...questionBank].sort(() => 0.5 - Math.random()).slice(0, currentQuestionCount);
+            if (activeExamQuestions.length === 0) activeExamQuestions = [...questionBank];
+
+            initExamSession("Simulacro Rápido General");
+        }
+
+        function startConfiguredExam() {
+            // Filtra por asignatura y temas seleccionados
+            let pool = questionBank.filter(q => q.subjectId === selectedSubject.id);
+            if (pool.length === 0) {
+                // Si no hay suficientes preguntas en el banco para esa asignatura específica, usamos el banco general como respaldo
+                pool = [...questionBank];
+            }
+            activeExamQuestions = pool.sort(() => 0.5 - Math.random()).slice(0, currentQuestionCount);
+
+            initExamSession(selectedSubject.name);
+        }
+
+        function initExamSession(subjectTitle) {
+            currentQuestionIndex = 0;
+            userAnswers = {};
+
+            document.getElementById('exam-subject-badge').innerText = subjectTitle;
+
+            hideAllViews();
+            document.getElementById('view-exam').classList.remove('hidden');
+            document.getElementById('header-actions').classList.add('hidden'); // Ocultar botón de errores durante el examen
+
+            renderQuestion();
+            renderJumpDots();
+        }
+
+        function renderQuestion() {
+            const q = activeExamQuestions[currentQuestionIndex];
+            document.getElementById('exam-progress-text').innerText = `Pregunta ${currentQuestionIndex + 1} de ${activeExamQuestions.length}`;
+            document.getElementById('question-title').innerText = q.text;
+            document.getElementById('question-unit-tag').innerText = `📖 ${q.unit}`;
+
+            // Imagen
+            const imgContainer = document.getElementById('question-image-container');
+            if (q.image) {
+                document.getElementById('question-image').src = q.image;
+                imgContainer.classList.remove('hidden');
+            } else {
+                imgContainer.classList.add('hidden');
+            }
+
+            const optionsContainer = document.getElementById('question-options-container');
+            optionsContainer.innerHTML = '';
+
+            // Renderizar según tipología
+            if (q.type === 'single') {
+                q.options.forEach((opt, idx) => {
+                    const isChecked = userAnswers[currentQuestionIndex] === idx;
+                    optionsContainer.innerHTML += `
+                        <label class="flex items-center space-x-3 p-3.5 rounded-xl border ${isChecked ? 'border-primary bg-primary-light text-primary font-semibold' : 'border-gray-200 hover:bg-gray-50 text-gray-700'} transition cursor-pointer">
+                            <input type="radio" name="q_single" ${isChecked ? 'checked' : ''} onchange="saveAnswer(${idx})" class="w-4 h-4 text-primary">
+                            <span class="text-sm">${opt}</span>
+                        </label>
+                    `;
+                });
+            } else if (q.type === 'multiple') {
+                const currentSelection = userAnswers[currentQuestionIndex] || [];
+                q.options.forEach((opt, idx) => {
+                    const isChecked = currentSelection.includes(idx);
+                    optionsContainer.innerHTML += `
+                        <label class="flex items-center space-x-3 p-3.5 rounded-xl border ${isChecked ? 'border-primary bg-primary-light text-primary font-semibold' : 'border-gray-200 hover:bg-gray-50 text-gray-700'} transition cursor-pointer">
+                            <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleMultipleAnswer(${idx})" class="w-4 h-4 text-primary rounded">
+                            <span class="text-sm">${opt}</span>
+                        </label>
+                    `;
+                });
+            } else if (q.type === 'matching') {
+                const currentSelection = userAnswers[currentQuestionIndex] || {};
+                let html = '<div class="space-y-3">';
+                q.pairs.forEach((pair, pIdx) => {
+                    const selectedOpt = currentSelection[pIdx] !== undefined ? currentSelection[pIdx] : '';
+                    html += `
+                        <div class="flex flex-col md:flex-row md:items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-200 gap-2">
+                            <span class="text-sm font-medium text-gray-800">${pair.left}</span>
+                            <select onchange="saveMatchingAnswer(${pIdx}, this.value)" class="p-2 rounded-lg border border-gray-300 text-sm bg-white focus:ring-primary focus:border-primary">
+                                <option value="">-- Seleccionar correspondencia --</option>
+                                ${q.pairs.map((p2, optIdx) => `<option value="${optIdx}" ${selectedOpt == optIdx ? 'selected' : ''}>${p2.right}</option>`).join('')}
+                            </select>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+                optionsContainer.innerHTML = html;
+            } else if (q.type === 'dropdown') {
+                const currentSelection = userAnswers[currentQuestionIndex] || {};
+                let parsedText = q.textTemplate;
+                Object.keys(q.dropdowns).forEach(dropKey => {
+                    const dropData = q.dropdowns[dropKey];
+                    const selectedVal = currentSelection[dropKey] !== undefined ? currentSelection[dropKey] : '';
+                    let selectHtml = `<select onchange="saveDropdownAnswer('${dropKey}', this.value)" class="mx-1 p-1.5 rounded-lg border border-primary bg-primary-light text-primary text-sm font-semibold focus:ring-primary">
+                        <option value="">-- Elige opción --</option>
+                        ${dropData.options.map((opt, oIdx) => `<option value="${oIdx}" ${selectedVal == oIdx ? 'selected' : ''}>${opt}</option>`).join('')}
+                    </select>`;
+                    parsedText = parsedText.replace(`[${dropKey}]`, selectHtml);
+                });
+                optionsContainer.innerHTML = `<div class="p-4 bg-gray-50 rounded-xl border border-gray-200 text-sm leading-relaxed text-gray-800">${parsedText}</div>`;
+            } else if (q.type === 'wordbank') {
+                const currentSelection = userAnswers[currentQuestionIndex] || {};
+                let parsedText = q.textTemplate;
+                const selectedVal = currentSelection['BLANK1'] || '';
+                let selectHtml = `<select onchange="saveWordBankAnswer('BLANK1', this.value)" class="mx-1 p-1.5 rounded-lg border border-primary bg-primary-light text-primary text-sm font-semibold focus:ring-primary">
+                    <option value="">-- Selecciona palabra --</option>
+                    ${q.words.map(w => `<option value="${w}" ${selectedVal === w ? 'selected' : ''}>${w}</option>`).join('')}
+                </select>`;
+                parsedText = parsedText.replace('[BLANK1]', selectHtml);
+                optionsContainer.innerHTML = `<div class="p-4 bg-gray-50 rounded-xl border border-gray-200 text-sm leading-relaxed text-gray-800">${parsedText}</div>`;
+            } else if (q.type === 'textentry') {
+                const currentVal = userAnswers[currentQuestionIndex] || '';
+                optionsContainer.innerHTML = `
+                    <div class="space-y-2">
+                        <label class="text-xs text-gray-500 font-medium">Escribe tu respuesta breve:</label>
+                        <input type="text" value="${currentVal}" oninput="saveTextAnswer(this.value)" placeholder="Escribe aquí..." class="w-full p-3 rounded-xl border border-gray-300 text-sm focus:ring-primary focus:border-primary">
+                    </div>
+                `;
+            }
+
+            // Actualizar botones anterior / siguiente
+            document.getElementById('btn-prev').disabled = currentQuestionIndex === 0;
+            document.getElementById('btn-next').innerText = currentQuestionIndex === activeExamQuestions.length - 1 ? 'Finalizar →' : 'Siguiente →';
+
+            updateJumpDotsActive();
+        }
+
+        function renderJumpDots() {
+            const container = document.getElementById('question-jump-dots');
+            container.innerHTML = '';
+            activeExamQuestions.forEach((_, idx) => {
+                container.innerHTML += `
+                    <button onclick="goToQuestion(${idx})" id="dot-${idx}" class="w-8 h-8 rounded-lg text-xs font-bold border border-gray-200 bg-white text-gray-700 hover:border-primary transition shrink-0">
+                        ${idx + 1}
+                    </button>
+                `;
+            });
+            updateJumpDotsActive();
+        }
+
+        function updateJumpDotsActive() {
+            activeExamQuestions.forEach((_, idx) => {
+                const dot = document.getElementById(`dot-${idx}`);
+                if (!dot) return;
+                const isAnswered = userAnswers[idx] !== undefined && userAnswers[idx] !== '' && (Array.isArray(userAnswers[idx]) ? userAnswers[idx].length > 0 : true);
+
+                if (idx === currentQuestionIndex) {
+                    dot.className = "w-8 h-8 rounded-lg text-xs font-bold bg-primary text-white border border-primary shrink-0 shadow-sm";
+                } else if (isAnswered) {
+                    dot.className = "w-8 h-8 rounded-lg text-xs font-bold bg-teal-50 text-primary border border-teal-200 shrink-0";
+                } else {
+                    dot.className = "w-8 h-8 rounded-lg text-xs font-bold bg-white text-gray-700 border border-gray-200 shrink-0";
+                }
+            });
+        }
+
+        function saveAnswer(val) {
+            userAnswers[currentQuestionIndex] = val;
+            updateJumpDotsActive();
+        }
+
+        function toggleMultipleAnswer(optIdx) {
+            if (!userAnswers[currentQuestionIndex]) userAnswers[currentQuestionIndex] = [];
+            let arr = userAnswers[currentQuestionIndex];
+            if (arr.includes(optIdx)) {
+                arr = arr.filter(i => i !== optIdx);
+            } else {
+                arr.push(optIdx);
+            }
+            userAnswers[currentQuestionIndex] = arr;
+            renderQuestion();
+        }
+
+        function saveMatchingAnswer(pairIdx, val) {
+            if (!userAnswers[currentQuestionIndex]) userAnswers[currentQuestionIndex] = {};
+            userAnswers[currentQuestionIndex][pairIdx] = val !== "" ? parseInt(val) : undefined;
+            updateJumpDotsActive();
+        }
+
+        function saveDropdownAnswer(dropKey, val) {
+            if (!userAnswers[currentQuestionIndex]) userAnswers[currentQuestionIndex] = {};
+            userAnswers[currentQuestionIndex][dropKey] = val !== "" ? parseInt(val) : undefined;
+            updateJumpDotsActive();
+        }
+
+        function saveWordBankAnswer(blankKey, val) {
+            if (!userAnswers[currentQuestionIndex]) userAnswers[currentQuestionIndex] = {};
+            userAnswers[currentQuestionIndex][blankKey] = val;
+            updateJumpDotsActive();
+        }
+
+        function saveTextAnswer(val) {
+            userAnswers[currentQuestionIndex] = val.trim();
+            updateJumpDotsActive();
+        }
+
+        function prevQuestion() {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                renderQuestion();
+            }
+        }
+
+        function nextQuestion() {
+            if (currentQuestionIndex < activeExamQuestions.length - 1) {
+                currentQuestionIndex++;
+                renderQuestion();
+            } else {
+                confirmSubmitExam();
+            }
+        }
+
+        function goToQuestion(idx) {
+            currentQuestionIndex = idx;
+            renderQuestion();
+        }
+
+        function confirmSubmitExam() {
+            let unanswered = 0;
+            activeExamQuestions.forEach((_, idx) => {
+                const ans = userAnswers[idx];
+                if (ans === undefined || ans === '' || (Array.isArray(ans) && ans.length === 0)) {
+                    unanswered++;
+                }
+            });
+
+            const warningText = document.getElementById('confirm-warning-text');
+            if (unanswered > 0) {
+                warningText.innerText = `Tienes ${unanswered} preguntas sin responder. ¿Seguro que deseas entregar el examen ahora?`;
+            } else {
+                warningText.innerText = `Has respondido a todas las preguntas. ¿Deseas entregar el examen y ver tu nota y análisis?`;
+            }
+            document.getElementById('modal-confirm').classList.remove('hidden');
+        }
+
+        function closeConfirmModal() {
+            document.getElementById('modal-confirm').classList.add('hidden');
+        }
+
+        function executeSubmitExam() {
+            closeConfirmModal();
+            calculateResults();
+        }
+
+        // Corrección y cálculo proporcional de nota
+        function calculateResults() {
+            let totalScore = 0;
+            let detailedAnalysis = [];
+
+            activeExamQuestions.forEach((q, idx) => {
+                const userAns = userAnswers[idx];
+                let questionScore = 0; // De 0 a 1
+
+                if (q.type === 'single') {
+                    if (userAns !== undefined && userAns === q.correctAnswer) {
+                        questionScore = 1;
+                    }
+                } else if (q.type === 'multiple') {
+                    if (Array.isArray(userAns)) {
+                        const correctArr = q.correctAnswer;
+                        let correctHits = 0;
+                        let incorrectHits = 0;
+
+                        userAns.forEach(ans => {
+                            if (correctArr.includes(ans)) correctHits++;
+                            else incorrectHits++;
+                        });
+
+                        // Cálculo proporcional: aciertos netos sobre el total de correctas esperadas
+                        let score = (correctHits - incorrectHits) / correctArr.length;
+                        questionScore = Math.max(0, Math.min(1, score));
+                    }
+                } else if (q.type === 'matching') {
+                    if (userAns && typeof userAns === 'object') {
+                        let totalPairs = Object.keys(q.correctAnswer).length;
+                        let correctPairs = 0;
+                        Object.keys(q.correctAnswer).forEach(pKey => {
+                            if (userAns[pKey] === q.correctAnswer[pKey]) correctPairs++;
+                        });
+                        questionScore = correctPairs / totalPairs;
+                    }
+                } else if (q.type === 'dropdown') {
+                    if (userAns && typeof userAns === 'object') {
+                        let totalDrops = Object.keys(q.dropdowns).length;
+                        let correctDrops = 0;
+                        Object.keys(q.dropdowns).forEach(dKey => {
+                            if (userAns[dKey] === q.dropdowns[dKey].correct) correctDrops++;
+                        });
+                        questionScore = correctDrops / totalDrops;
+                    }
+                } else if (q.type === 'wordbank') {
+                    if (userAns && userAns['BLANK1'] === q.correctAnswer['BLANK1']) {
+                        questionScore = 1;
+                    }
+                } else if (q.type === 'textentry') {
+                    if (userAns && q.validAnswers.map(a => a.toLowerCase()).includes(userAns.toLowerCase())) {
+                        questionScore = 1;
+                    }
+                }
+
+                totalScore += questionScore;
+
+                // Si hay fallo o parcial (< 1), guardar en banco de errores local
+                if (questionScore < 1) {
+                    addErrorToStorage(q);
+                }
+
+                detailedAnalysis.push({
+                    question: q,
+                    userAnswer: userAns,
+                    score: questionScore
+                });
+            });
+
+            const maxPossible = activeExamQuestions.length;
+            const percentage = Math.round((totalScore / maxPossible) * 100);
+            const grade10 = ((totalScore / maxPossible) * 10).toFixed(1);
+
+            examResults = {
+                score: totalScore,
+                max: maxPossible,
+                percentage: percentage,
+                grade10: grade10,
+                analysis: detailedAnalysis
+            };
+
+            renderResultsView();
+        }
+
+        function addErrorToStorage(questionObj) {
+            // Evitar duplicados exactos
+            if (!savedErrors.some(e => e.id === questionObj.id)) {
+                savedErrors.push(questionObj);
+                localStorage.setItem('tcae_errors', JSON.stringify(savedErrors));
+                updateErrorBadge();
+            }
+        }
+
+        function renderResultsView() {
+            document.getElementById('res-grade-10').innerText = `${examResults.grade10} / 10`;
+            document.getElementById('res-percentage').innerText = `${examResults.percentage}%`;
+
+            renderAnalysisList('all');
+
+            hideAllViews();
+            document.getElementById('view-results').classList.remove('hidden');
+        }
+
+        function filterAnalysis(filterType) {
+            document.getElementById('filter-all').className = "px-3 py-1.5 rounded-lg " + (filterType === 'all' ? "bg-white text-gray-800 shadow-sm" : "text-gray-600 hover:text-gray-900");
+            document.getElementById('filter-errors').className = "px-3 py-1.5 rounded-lg " + (filterType === 'errors' ? "bg-white text-gray-800 shadow-sm" : "text-gray-600 hover:text-gray-900");
+            document.getElementById('filter-correct').className = "px-3 py-1.5 rounded-lg " + (filterType === 'correct' ? "bg-white text-gray-800 shadow-sm" : "text-gray-600 hover:text-gray-900");
+
+            renderAnalysisList(filterType);
+        }
+
+        function renderAnalysisList(filterType) {
+            const container = document.getElementById('analysis-list');
+            container.innerHTML = '';
+
+            let filtered = examResults.analysis;
+            if (filterType === 'errors') {
+                filtered = examResults.analysis.filter(item => item.score < 1);
+            } else if (filterType === 'correct') {
+                filtered = examResults.analysis.filter(item => item.score === 1);
+            }
+
+            if (filtered.length === 0) {
+                container.innerHTML = `<p class="text-center text-sm text-gray-400 py-6">No hay preguntas en esta categoría.</p>`;
+                return;
+            }
+
+            filtered.forEach((item, idx) => {
+                const q = item.question;
+                const score = item.score;
+
+                let badgeColor = score === 1 ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : (score > 0 ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-red-50 text-red-700 border-red-200');
+                let badgeText = score === 1 ? 'Correcta (100%)' : (score > 0 ? `Parcial (${Math.round(score * 100)}%)` : 'Incorrecta (0%)');
+
+                let solutionHtml = '';
+                if (q.type === 'single' || q.type === 'image') {
+                    solutionHtml = `<p class="text-xs text-emerald-700 font-semibold mt-1">✔ Correcta: ${q.options[q.correctAnswer]}</p>`;
+                } else if (q.type === 'multiple') {
+                    let correctStrs = q.correctAnswer.map(i => q.options[i]).join(', ');
+                    solutionHtml = `<p class="text-xs text-emerald-700 font-semibold mt-1">✔ Opciones correctas: ${correctStrs}</p>`;
+                } else if (q.type === 'wordbank') {
+                    solutionHtml = `<p class="text-xs text-emerald-700 font-semibold mt-1">✔ Palabra correcta: ${q.correctAnswer['BLANK1']}</p>`;
+                } else if (q.type === 'textentry') {
+                    solutionHtml = `<p class="text-xs text-emerald-700 font-semibold mt-1">✔ Respuesta válida: ${q.validAnswers[0]}</p>`;
+                } else {
+                    solutionHtml = `<p class="text-xs text-emerald-700 font-semibold mt-1">✔ Revisar emparejamientos/desplegables en apuntes.</p>`;
+                }
+
+                container.innerHTML += `
+                    <div class="p-4 rounded-xl border border-gray-100 bg-gray-50/50 space-y-2">
+                        <div class="flex items-start justify-between gap-2">
+                            <span class="text-xs font-bold text-gray-500">Pregunta #${idx + 1}</span>
+                            <span class="text-[10px] font-bold px-2 py-0.5 rounded-md border ${badgeColor}">${badgeText}</span>
+                        </div>
+                        <p class="text-sm font-semibold text-gray-900">${q.text}</p>
+                        ${solutionHtml}
+                        <div class="pt-1 flex items-center justify-between text-xs">
+                            <span class="text-primary font-medium">📖 Repasa: ${q.unit}</span>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // Modal de Errores
+        function openErrorsModal() {
+            const container = document.getElementById('errors-modal-content');
+            container.innerHTML = '';
+
+            if (savedErrors.length === 0) {
+                container.innerHTML = `<p class="text-center text-sm text-gray-400 py-6">No tienes errores guardados todavía. ¡Buen trabajo!</p>`;
+            } else {
+                savedErrors.forEach((errQ, idx) => {
+                    container.innerHTML += `
+                        <div class="p-3.5 bg-gray-50 rounded-xl border border-gray-200 space-y-1">
+                            <div class="flex justify-between items-center">
+                                <span class="text-[10px] font-bold text-gray-400">ID #${errQ.id}</span>
+                                <span class="text-[10px] text-primary font-semibold">📖 ${errQ.unit}</span>
+                            </div>
+                            <p class="text-xs font-semibold text-gray-800">${errQ.text}</p>
+                        </div>
+                    `;
+                });
+            }
+
+            document.getElementById('modal-errors').classList.remove('hidden');
+        }
+
+        function closeErrorsModal() {
+            document.getElementById('modal-errors').classList.add('hidden');
+        }
+
+        function clearErrors() {
+            if (confirm("¿Seguro que deseas borrar todo el historial de errores?")) {
+                savedErrors = [];
+                localStorage.removeItem('tcae_errors');
+                updateErrorBadge();
+                openErrorsModal();
+            }
+        }
+
+        function updateErrorBadge() {
+            document.getElementById('error-badge').innerText = savedErrors.length;
+        }
+
+        // Zoom de imagen
+        function zoomImage(src) {
+            document.getElementById('zoomed-image').src = src;
+            document.getElementById('modal-zoom').classList.remove('hidden');
+        }
+
+        function closeZoom() {
+            document.getElementById('modal-zoom').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
