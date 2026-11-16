@@ -50,27 +50,43 @@
         <!-- VISTA 1: HOME -->
         <div id="view-home" class="space-y-6">
 
-            <!-- Simulacro Rápido -->
-            <div class="bg-gradient-to-r from-primary to-teal-700 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden">
-                <div class="relative z-10">
-                    <span class="bg-white/20 text-white text-xs font-semibold px-2.5 py-1 rounded-full uppercase tracking-wider">Modo exprés</span>
-                    <h2 class="text-2xl font-bold mt-2">Simulacro Rápido General</h2>
-                    <p class="text-teal-100 text-sm mt-1 max-w-md">30 preguntas aleatorias de todas las asignaturas para poner a prueba tu nivel al instante.</p>
-
-                    <div class="mt-4 flex flex-wrap items-center gap-3">
-                        <button onclick="startQuickExam()" class="bg-white text-primary font-bold px-5 py-2.5 rounded-xl shadow hover:bg-teal-50 transition active:scale-95 text-sm">
+            <!-- Fila superior: Simulacro Rápido y Examen de Errores -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                
+                <!-- Simulacro Rápido -->
+                <div class="bg-gradient-to-r from-primary to-teal-700 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden flex flex-col justify-between">
+                    <div class="relative z-10">
+                        <span class="bg-white/20 text-white text-xs font-semibold px-2.5 py-1 rounded-full uppercase tracking-wider">Modo exprés</span>
+                        <h2 class="text-2xl font-bold mt-2">Simulacro Rápido General</h2>
+                        <p class="text-teal-100 text-sm mt-1 mb-4">30 preguntas aleatorias de todas las asignaturas para poner a prueba tu nivel al instante.</p>
+                        <button onclick="startQuickExam()" class="bg-white text-primary font-bold px-5 py-2.5 rounded-xl shadow hover:bg-teal-50 transition active:scale-95 text-sm w-max">
                             Empezar Simulacro 🚀
                         </button>
                     </div>
+                    <div class="absolute -right-6 -bottom-6 text-white/10 text-9xl font-bold select-none pointer-events-none">
+                        TCAE
+                    </div>
                 </div>
-                <div class="absolute -right-6 -bottom-6 text-white/10 text-9xl font-bold select-none pointer-events-none">
-                    TCAE
+
+                <!-- Examen de Errores -->
+                <div class="bg-gradient-to-r from-amber-500 to-orange-600 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden flex flex-col justify-between">
+                    <div class="relative z-10">
+                        <span class="bg-white/20 text-white text-xs font-semibold px-2.5 py-1 rounded-full uppercase tracking-wider">Refuerzo</span>
+                        <h2 class="text-2xl font-bold mt-2">Repaso de Errores</h2>
+                        <p class="text-orange-100 text-sm mt-1 mb-4">Entrena solo con tus fallos anteriores. Priorizamos las preguntas que más veces se te resisten.</p>
+                        <button onclick="startErrorExam()" class="bg-white text-amber-600 font-bold px-5 py-2.5 rounded-xl shadow hover:bg-orange-50 transition active:scale-95 text-sm w-max">
+                            Entrenar Fallos 🧠
+                        </button>
+                    </div>
+                    <div class="absolute -right-2 -bottom-2 text-white/10 text-9xl font-bold select-none pointer-events-none">
+                        ⚠️
+                    </div>
                 </div>
             </div>
 
             <!-- Listado de Asignaturas -->
             <div>
-                <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center justify-between mb-4 mt-6">
                     <h3 class="text-lg font-bold text-gray-900">Asignaturas</h3>
                     <span class="text-xs text-gray-500 font-medium">Elige una para filtrar</span>
                 </div>
@@ -247,7 +263,6 @@
     </div>
 
     <script>
-        // Funciones wrapper seguras para evitar crasheos por History API (uso local/incógnito)
         function safePushState(state, title, url) {
             try { history.pushState(state, title, url); } catch (e) { console.warn("History API no disponible"); }
         }
@@ -287,7 +302,6 @@
         let examResults = null;
         let savedErrors = [];
         
-        // Carga de LocalStorage protegida por try/catch para evitar bloqueos
         try {
             savedErrors = JSON.parse(localStorage.getItem('tcae_errors') || '[]');
         } catch (e) {
@@ -424,6 +438,23 @@
             initExamSession(selectedSubject.name);
         }
 
+        function startErrorExam() {
+            if (savedErrors.length === 0) {
+                alert("¡No tienes errores guardados! Sigue practicando.");
+                return;
+            }
+            let pool = [...savedErrors].sort((a, b) => {
+                let countA = a.failCount || 1;
+                let countB = b.failCount || 1;
+                if (countB === countA) return 0.5 - Math.random();
+                return countB - countA;
+            });
+            
+            let numQuestions = Math.min(pool.length, currentQuestionCount);
+            activeExamQuestions = pool.slice(0, numQuestions);
+            initExamSession("Repaso de Errores Prioritarios");
+        }
+
         function initExamSession(subjectTitle) {
             currentQuestionIndex = 0;
             userAnswers = {};
@@ -476,12 +507,11 @@
                 let html = '<div class="space-y-3">';
                 q.pairs.forEach((pair, pIdx) => {
                     const selectedOpt = currentSelection[pIdx] !== undefined ? currentSelection[pIdx] : '';
-                    // FIX MÓVIL: Añadido "===" en lugar de "==" para evitar que un '' coincida con el index 0.
                     html += `
                         <div class="flex flex-col md:flex-row md:items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-200 gap-2">
                             <span class="text-sm font-medium text-gray-800">${pair.left}</span>
                             <select onchange="saveMatchingAnswer(${pIdx}, this.value)" class="p-2 rounded-lg border border-gray-300 text-sm bg-white focus:ring-primary focus:border-primary">
-                                <option value="">-- Seleccionar correspondencia --</option>
+                                <option value="">Selecciona respuesta</option>
                                 ${q.pairs.map((p2, optIdx) => `<option value="${optIdx}" ${selectedOpt === optIdx ? 'selected' : ''}>${p2.right}</option>`).join('')}
                             </select>
                         </div>
@@ -495,9 +525,8 @@
                 Object.keys(q.dropdowns).forEach(dropKey => {
                     const dropData = q.dropdowns[dropKey];
                     const selectedVal = currentSelection[dropKey] !== undefined ? currentSelection[dropKey] : '';
-                    // FIX MÓVIL: Añadido "===" en lugar de "=="
                     let selectHtml = `<select onchange="saveDropdownAnswer('${dropKey}', this.value)" class="mx-1 p-1.5 rounded-lg border border-primary bg-primary-light text-primary text-sm font-semibold focus:ring-primary">
-                        <option value="">-- Elige opción --</option>
+                        <option value="">Selecciona respuesta</option>
                         ${dropData.options.map((opt, oIdx) => `<option value="${oIdx}" ${selectedVal === oIdx ? 'selected' : ''}>${opt}</option>`).join('')}
                     </select>`;
                     parsedText = parsedText.replace(`[${dropKey}]`, selectHtml);
@@ -508,7 +537,7 @@
                 let parsedText = q.textTemplate;
                 const selectedVal = currentSelection['BLANK1'] || '';
                 let selectHtml = `<select onchange="saveWordBankAnswer('BLANK1', this.value)" class="mx-1 p-1.5 rounded-lg border border-primary bg-primary-light text-primary text-sm font-semibold focus:ring-primary">
-                    <option value="">-- Selecciona palabra --</option>
+                    <option value="">Selecciona respuesta</option>
                     ${q.words.map(w => `<option value="${w}" ${selectedVal === w ? 'selected' : ''}>${w}</option>`).join('')}
                 </select>`;
                 parsedText = parsedText.replace('[BLANK1]', selectHtml);
@@ -648,7 +677,22 @@
                 }
 
                 totalScore += questionScore;
-                if (questionScore < 1) addErrorToStorage(q);
+                
+                if (questionScore < 1) {
+                    addErrorToStorage(q);
+                } else {
+                    // Si acierta, curamos el error reduciendo su contador (si existía)
+                    let errIdx = savedErrors.findIndex(e => e.id === q.id);
+                    if (errIdx !== -1) {
+                        savedErrors[errIdx].failCount = (savedErrors[errIdx].failCount || 1) - 1;
+                        if (savedErrors[errIdx].failCount <= 0) {
+                            savedErrors.splice(errIdx, 1);
+                        }
+                        try { localStorage.setItem('tcae_errors', JSON.stringify(savedErrors)); } catch(e) {}
+                        updateErrorBadge();
+                    }
+                }
+                
                 detailedAnalysis.push({ question: q, userAnswer: userAns, score: questionScore });
             });
 
@@ -661,13 +705,18 @@
         }
 
         function addErrorToStorage(questionObj) {
-            if (!savedErrors.some(e => e.id === questionObj.id)) {
-                savedErrors.push(questionObj);
-                try {
-                    localStorage.setItem('tcae_errors', JSON.stringify(savedErrors));
-                } catch(e) {}
-                updateErrorBadge();
+            let existingIndex = savedErrors.findIndex(e => e.id === questionObj.id);
+            if (existingIndex !== -1) {
+                savedErrors[existingIndex].failCount = (savedErrors[existingIndex].failCount || 1) + 1;
+            } else {
+                let qCopy = JSON.parse(JSON.stringify(questionObj));
+                qCopy.failCount = 1;
+                savedErrors.push(qCopy);
             }
+            try {
+                localStorage.setItem('tcae_errors', JSON.stringify(savedErrors));
+            } catch(e) {}
+            updateErrorBadge();
         }
 
         function renderResultsView() {
@@ -731,11 +780,12 @@
             if (savedErrors.length === 0) {
                 container.innerHTML = `<p class="text-center text-sm text-gray-400 py-6">No tienes errores guardados todavía.</p>`;
             } else {
-                savedErrors.forEach((errQ) => {
+                let sortedForModal = [...savedErrors].sort((a,b) => (b.failCount || 1) - (a.failCount || 1));
+                sortedForModal.forEach((errQ) => {
                     container.innerHTML += `
                         <div class="p-3.5 bg-gray-50 rounded-xl border border-gray-200 space-y-1">
                             <div class="flex justify-between items-center">
-                                <span class="text-[10px] font-bold text-gray-400">ID #${errQ.id}</span>
+                                <span class="text-[10px] font-bold text-gray-400">ID #${errQ.id} | Fallos: ${errQ.failCount || 1}</span>
                                 <span class="text-[10px] text-primary font-semibold">📖 ${errQ.unit}</span>
                             </div>
                             <p class="text-xs font-semibold text-gray-800">${errQ.text}</p>
