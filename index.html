@@ -476,12 +476,13 @@
                 let html = '<div class="space-y-3">';
                 q.pairs.forEach((pair, pIdx) => {
                     const selectedOpt = currentSelection[pIdx] !== undefined ? currentSelection[pIdx] : '';
+                    // FIX MÓVIL: Añadido "===" en lugar de "==" para evitar que un '' coincida con el index 0.
                     html += `
                         <div class="flex flex-col md:flex-row md:items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-200 gap-2">
                             <span class="text-sm font-medium text-gray-800">${pair.left}</span>
                             <select onchange="saveMatchingAnswer(${pIdx}, this.value)" class="p-2 rounded-lg border border-gray-300 text-sm bg-white focus:ring-primary focus:border-primary">
                                 <option value="">-- Seleccionar correspondencia --</option>
-                                ${q.pairs.map((p2, optIdx) => `<option value="${optIdx}" ${selectedOpt == optIdx ? 'selected' : ''}>${p2.right}</option>`).join('')}
+                                ${q.pairs.map((p2, optIdx) => `<option value="${optIdx}" ${selectedOpt === optIdx ? 'selected' : ''}>${p2.right}</option>`).join('')}
                             </select>
                         </div>
                     `;
@@ -494,9 +495,10 @@
                 Object.keys(q.dropdowns).forEach(dropKey => {
                     const dropData = q.dropdowns[dropKey];
                     const selectedVal = currentSelection[dropKey] !== undefined ? currentSelection[dropKey] : '';
+                    // FIX MÓVIL: Añadido "===" en lugar de "=="
                     let selectHtml = `<select onchange="saveDropdownAnswer('${dropKey}', this.value)" class="mx-1 p-1.5 rounded-lg border border-primary bg-primary-light text-primary text-sm font-semibold focus:ring-primary">
                         <option value="">-- Elige opción --</option>
-                        ${dropData.options.map((opt, oIdx) => `<option value="${oIdx}" ${selectedVal == oIdx ? 'selected' : ''}>${opt}</option>`).join('')}
+                        ${dropData.options.map((opt, oIdx) => `<option value="${oIdx}" ${selectedVal === oIdx ? 'selected' : ''}>${opt}</option>`).join('')}
                     </select>`;
                     parsedText = parsedText.replace(`[${dropKey}]`, selectHtml);
                 });
